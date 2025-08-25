@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AddAccountDialog } from "@/components/AddAccountDialog";
 import { EditRecurringAccountDialog } from "@/components/EditRecurringAccountDialog";
+import AppHeader from "@/components/AppHeader";
 
 // Mock data - substitua pela chamada à sua API
 const mockRecurringAccounts = [
@@ -96,8 +97,10 @@ const RecurringAccounts = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen gradient-bg">
+      <AppHeader />
+      <div className="p-4">
+        <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in">
           <div>
@@ -257,6 +260,7 @@ const RecurringAccounts = () => {
             account={editingAccount}
           />
         )}
+        </div>
       </div>
     </div>
   );

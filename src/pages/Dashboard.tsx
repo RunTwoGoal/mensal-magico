@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddAccountDialog } from "@/components/AddAccountDialog";
 import { AccountCard } from "@/components/AccountCard";
+import AppHeader from "@/components/AppHeader";
 
 // Mock data - substitua pela chamada à sua API
 const mockAccounts = [
@@ -118,8 +119,10 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen gradient-bg">
+      <AppHeader />
+      <div className="p-4">
+        <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in">
           <div>
@@ -280,6 +283,7 @@ const Dashboard = () => {
           onOpenChange={setIsAddDialogOpen}
           onAdd={handleAddAccount}
         />
+        </div>
       </div>
     </div>
   );

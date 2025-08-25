@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,11 +12,18 @@ const Login = () => {
     email: "",
     password: ""
   });
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Aqui você fará a chamada para sua API de login
     console.log("Login attempt:", formData);
+    
+    // Simular login bem-sucedido - substitua pela sua lógica de API
+    if (formData.email && formData.password) {
+      // Após login bem-sucedido, redirecionar para dashboard
+      navigate("/dashboard");
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
