@@ -126,9 +126,20 @@ const Index = () => {
                 </Button>
                 <Button asChild variant="outline" size="lg" className="transition-smooth">
                   <Link to="/dashboard">
-                    Ver Dashboard Demo
+                    Ver Dashboard
                   </Link>
                 </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center mt-4 text-sm text-muted-foreground">
+                <Link to="/recurring" className="hover:text-foreground transition-colors">
+                  • Contas Recorrentes
+                </Link>
+                <Link to="/history" className="hover:text-foreground transition-colors">
+                  • Histórico Mensal
+                </Link>
+                <Link to="/dashboard" className="hover:text-foreground transition-colors">
+                  • Dashboard Completo
+                </Link>
               </div>
             </CardHeader>
           </Card>

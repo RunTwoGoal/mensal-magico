@@ -25,9 +25,10 @@ interface AccountCardProps {
   };
   onTogglePaid: (id: number) => void;
   onDelete: (id: number) => void;
+  readOnly?: boolean;
 }
 
-export function AccountCard({ account, onTogglePaid, onDelete }: AccountCardProps) {
+export function AccountCard({ account, onTogglePaid, onDelete, readOnly = false }: AccountCardProps) {
   const dueDate = new Date(account.dueDate);
   const isOverdue = !account.isPaid && dueDate < new Date();
 
@@ -83,39 +84,41 @@ export function AccountCard({ account, onTogglePaid, onDelete }: AccountCardProp
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant={account.isPaid ? "default" : "outline"}
-              size="sm"
-              onClick={() => onTogglePaid(account.id)}
-              className={`transition-smooth ${
-                account.isPaid 
-                  ? 'bg-success hover:bg-success/90 text-success-foreground' 
-                  : 'hover:shadow-glow'
-              }`}
-            >
-              {account.isPaid ? (
-                <>
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Pago
-                </>
-              ) : (
-                <>
-                  <Clock className="w-4 h-4 mr-2" />
-                  Marcar como Pago
-                </>
-              )}
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDelete(account.id)}
-              className="text-destructive hover:text-destructive-foreground hover:bg-destructive transition-smooth"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
+          {!readOnly && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant={account.isPaid ? "default" : "outline"}
+                size="sm"
+                onClick={() => onTogglePaid(account.id)}
+                className={`transition-smooth ${
+                  account.isPaid 
+                    ? 'bg-success hover:bg-success/90 text-success-foreground' 
+                    : 'hover:shadow-glow'
+                }`}
+              >
+                {account.isPaid ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Pago
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Marcar como Pago
+                  </>
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(account.id)}
+                className="text-destructive hover:text-destructive-foreground hover:bg-destructive transition-smooth"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {isOverdue && !account.isPaid && (
