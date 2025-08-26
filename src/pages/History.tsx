@@ -10,9 +10,14 @@ import {
   CheckCircle, 
   Clock,
   TrendingUp,
-  Filter
+  Filter,
+  PiggyBank,
+  AlertTriangle,
+  Target,
+  Edit3
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { AccountCard } from "@/components/AccountCard";
 import AppHeader from "@/components/AppHeader";
 
@@ -37,10 +42,20 @@ const mockHistoricalData = {
   ]
 };
 
+// Mock data para orçamentos mensais - substitua pela chamada à sua API
+const mockMonthlyBudgets = {
+  "2023-12": 2800,
+  "2024-01": 3000,
+  "2024-02": 3200,
+  "2024-03": 3000
+};
+
 const History = () => {
   const [currentDate, setCurrentDate] = useState(new Date("2024-01-01"));
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [monthlyBudgets, setMonthlyBudgets] = useState(mockMonthlyBudgets);
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
 
   const availableMonths = Object.keys(mockHistoricalData).sort();
   const currentMonthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
@@ -90,6 +105,20 @@ const History = () => {
     .reduce((sum, account) => sum + account.amount, 0);
   const pendingAmount = totalAmount - paidAmount;
   const paidCount = currentAccounts.filter(account => account.isPaid).length;
+
+  // Cálculos do orçamento para o mês atual
+  const currentMonthBudget = monthlyBudgets[currentMonthKey as keyof typeof monthlyBudgets] || 3000;
+  const remainingBudget = currentMonthBudget - totalAmount;
+  const budgetUsedPercentage = totalAmount > 0 ? Math.min((totalAmount / currentMonthBudget) * 100, 100) : 0;
+  const isOverBudget = totalAmount > currentMonthBudget;
+
+  const updateMonthlyBudget = (newBudget: number) => {
+    setMonthlyBudgets(prev => ({
+      ...prev,
+      [currentMonthKey]: newBudget
+    }));
+    setIsEditingBudget(false);
+  };
 
   const handleTogglePaid = (accountId: number) => {
     // Esta função seria chamada apenas para o mês atual
@@ -151,6 +180,139 @@ const History = () => {
             </div>
           </CardHeader>
         </Card>
+
+        {/* Budget Section */}
+        {currentAccounts.length > 0 && (
+          <Card className="shadow-card animate-fade-in border-l-4 border-l-primary">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <PiggyBank className="h-5 w-5 text-primary" />
+                  Orçamento de {monthName}
+                </div>
+                {isCurrentMonth() && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditingBudget(!isEditingBudget)}
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </Button>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Orçamento Disponível */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Valor Disponível</label>
+                  {isEditingBudget && isCurrentMonth() ? (
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        value={currentMonthBudget}
+                        onChange={(e) => updateMonthlyBudget(Number(e.target.value))}
+                        className="text-lg font-bold"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => setIsEditingBudget(false)}
+                      >
+                        OK
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-primary">
+                      R$ {currentMonthBudget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Saldo Restante */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    {isFutureMonth() ? "Saldo Previsto" : "Saldo Restante"}
+                  </label>
+                  <div className={`text-2xl font-bold ${
+                    isOverBudget ? 'text-destructive' : 'text-success'
+                  }`}>
+                    R$ {Math.abs(remainingBudget).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {isOverBudget && <span className="text-sm ml-1">(déficit)</span>}
+                  </div>
+                </div>
+
+                {/* Percentual Usado */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    {isFutureMonth() ? "Orçamento Planejado" : "Orçamento Usado"}
+                  </label>
+                  <div className={`text-2xl font-bold ${
+                    budgetUsedPercentage > 90 ? 'text-warning' : 
+                    budgetUsedPercentage > 100 ? 'text-destructive' : 'text-accent'
+                  }`}>
+                    {budgetUsedPercentage.toFixed(1)}%
+                  </div>
+                </div>
+
+                {/* Status Financeiro */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <div className="flex items-center gap-2">
+                    {isOverBudget ? (
+                      <>
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        <span className="text-destructive font-semibold">
+                          {isFutureMonth() ? "Acima do Planejado" : "Acima do Orçamento"}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Target className="h-5 w-5 text-success" />
+                        <span className="text-success font-semibold">
+                          {isFutureMonth() ? "Dentro do Planejado" : "Dentro do Orçamento"}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Barra de Progresso */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>
+                    {isFutureMonth() ? "Progresso do Planejamento" : "Progresso do Orçamento"}
+                  </span>
+                  <span>{budgetUsedPercentage.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-3">
+                  <div
+                    className={`h-3 rounded-full transition-all duration-300 ${
+                      budgetUsedPercentage > 100 ? 'bg-destructive' :
+                      budgetUsedPercentage > 90 ? 'bg-warning' : 'bg-primary'
+                    }`}
+                    style={{ width: `${Math.min(budgetUsedPercentage, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Mensagem de Status */}
+              {isOverBudget && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="font-medium">
+                      {isFutureMonth() 
+                        ? `Planejamento: R$ ${Math.abs(remainingBudget).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} acima do orçamento!`
+                        : `Você ficou R$ ${Math.abs(remainingBudget).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} acima do orçamento!`
+                      }
+                    </span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Cards */}
         {currentAccounts.length > 0 && (
