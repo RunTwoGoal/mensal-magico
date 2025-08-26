@@ -11,7 +11,11 @@ import {
   CheckCircle, 
   Clock,
   Filter,
-  Search
+  Search,
+  PiggyBank,
+  AlertTriangle,
+  Target,
+  Edit3
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,6 +73,8 @@ const Dashboard = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [monthlyBudget, setMonthlyBudget] = useState(3000); // Valor padrão
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
 
   const currentMonth = new Date().toLocaleDateString('pt-BR', { 
     month: 'long', 
@@ -83,6 +89,11 @@ const Dashboard = () => {
   const pendingAmount = totalAmount - paidAmount;
   const paidCount = accounts.filter(account => account.isPaid).length;
   const pendingCount = accounts.length - paidCount;
+
+  // Cálculos do orçamento
+  const remainingBudget = monthlyBudget - totalAmount;
+  const budgetUsedPercentage = Math.min((totalAmount / monthlyBudget) * 100, 100);
+  const isOverBudget = totalAmount > monthlyBudget;
 
   // Filtros
   const filteredAccounts = accounts.filter(account => {
@@ -137,6 +148,122 @@ const Dashboard = () => {
             Nova Conta
           </Button>
         </div>
+
+        {/* Budget Section */}
+        <Card className="shadow-card animate-fade-in border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PiggyBank className="h-5 w-5 text-primary" />
+                Orçamento Mensal
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditingBudget(!isEditingBudget)}
+              >
+                <Edit3 className="h-4 w-4" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Orçamento Disponível */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Valor Disponível</label>
+                {isEditingBudget ? (
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={monthlyBudget}
+                      onChange={(e) => setMonthlyBudget(Number(e.target.value))}
+                      className="text-lg font-bold"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => setIsEditingBudget(false)}
+                    >
+                      OK
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold text-primary">
+                    R$ {monthlyBudget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                )}
+              </div>
+
+              {/* Saldo Restante */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Saldo Restante</label>
+                <div className={`text-2xl font-bold ${
+                  isOverBudget ? 'text-destructive' : 'text-success'
+                }`}>
+                  R$ {Math.abs(remainingBudget).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  {isOverBudget && <span className="text-sm ml-1">(déficit)</span>}
+                </div>
+              </div>
+
+              {/* Percentual Usado */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Orçamento Usado</label>
+                <div className={`text-2xl font-bold ${
+                  budgetUsedPercentage > 90 ? 'text-warning' : 
+                  budgetUsedPercentage > 100 ? 'text-destructive' : 'text-accent'
+                }`}>
+                  {budgetUsedPercentage.toFixed(1)}%
+                </div>
+              </div>
+
+              {/* Status Financeiro */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <div className="flex items-center gap-2">
+                  {isOverBudget ? (
+                    <>
+                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                      <span className="text-destructive font-semibold">Acima do Orçamento</span>
+                    </>
+                  ) : (
+                    <>
+                      <Target className="h-5 w-5 text-success" />
+                      <span className="text-success font-semibold">Dentro do Orçamento</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Barra de Progresso */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Progresso do Orçamento</span>
+                <span>{budgetUsedPercentage.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-3">
+                <div
+                  className={`h-3 rounded-full transition-all duration-300 ${
+                    budgetUsedPercentage > 100 ? 'bg-destructive' :
+                    budgetUsedPercentage > 90 ? 'bg-warning' : 'bg-primary'
+                  }`}
+                  style={{ width: `${Math.min(budgetUsedPercentage, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Mensagem de Status */}
+            {isOverBudget && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="font-medium">
+                    Atenção: Você está R$ {Math.abs(remainingBudget).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} acima do orçamento!
+                  </span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-slide-up">
