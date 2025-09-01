@@ -140,13 +140,23 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground capitalize">{currentMonth}</p>
           </div>
-          <Button 
-            onClick={() => setIsAddDialogOpen(true)}
-            className="transition-smooth hover:shadow-glow"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Conta
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/recurring'}
+              className="transition-smooth"
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              Contas Recorrentes
+            </Button>
+            <Button 
+              onClick={() => setIsAddDialogOpen(true)}
+              className="transition-smooth hover:shadow-glow"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Conta
+            </Button>
+          </div>
         </div>
 
         {/* Budget Section */}

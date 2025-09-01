@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -27,7 +26,6 @@ export function AddAccountDialog({ open, onOpenChange, onAdd, isRecurringMode = 
     dueDate: undefined as Date | undefined,
     day: "",
     category: "",
-    isRecurring: isRecurringMode,
     repeatType: "forever",
     repeatCount: ""
   });
@@ -78,8 +76,7 @@ export function AddAccountDialog({ open, onOpenChange, onAdd, isRecurringMode = 
         name: formData.name,
         amount: parseFloat(formData.amount),
         dueDate: formData.dueDate.toISOString().split('T')[0],
-        category: formData.category,
-        isRecurring: formData.isRecurring
+        category: formData.category
       };
 
       onAdd(account);
@@ -92,7 +89,6 @@ export function AddAccountDialog({ open, onOpenChange, onAdd, isRecurringMode = 
       dueDate: undefined,
       day: "",
       category: "",
-      isRecurring: isRecurringMode,
       repeatType: "forever",
       repeatCount: ""
     });
@@ -110,7 +106,7 @@ export function AddAccountDialog({ open, onOpenChange, onAdd, isRecurringMode = 
           <DialogDescription>
             {isRecurringMode 
               ? "Configure uma nova conta que se repetirá automaticamente todos os meses."
-              : "Adicione uma nova conta ao seu controle mensal. Contas recorrentes aparecerão automaticamente nos próximos meses."
+              : "Adicione uma nova conta pontual ao seu controle mensal."
             }
           </DialogDescription>
         </DialogHeader>
@@ -205,7 +201,7 @@ export function AddAccountDialog({ open, onOpenChange, onAdd, isRecurringMode = 
             </Select>
           </div>
 
-          {isRecurringMode ? (
+          {isRecurringMode && (
             <div className="space-y-3">
               <Label>Tipo de Recorrência</Label>
               <RadioGroup
@@ -244,17 +240,6 @@ export function AddAccountDialog({ open, onOpenChange, onAdd, isRecurringMode = 
                   </p>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isRecurring"
-                checked={formData.isRecurring}
-                onCheckedChange={(checked) => handleInputChange("isRecurring", checked)}
-              />
-              <Label htmlFor="isRecurring" className="text-sm">
-                Conta recorrente (aparece automaticamente todo mês)
-              </Label>
             </div>
           )}
 

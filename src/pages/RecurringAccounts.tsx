@@ -107,13 +107,23 @@ const RecurringAccounts = () => {
             <h1 className="text-3xl font-bold text-foreground">Contas Recorrentes</h1>
             <p className="text-muted-foreground">Gerencie suas contas que se repetem mensalmente</p>
           </div>
-          <Button 
-            onClick={() => setIsAddDialogOpen(true)}
-            className="transition-smooth hover:shadow-glow"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Conta Recorrente
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/dashboard'}
+              className="transition-smooth"
+            >
+              <DollarSign className="mr-2 h-4 w-4" />
+              Ver Dashboard
+            </Button>
+            <Button 
+              onClick={() => setIsAddDialogOpen(true)}
+              className="transition-smooth hover:shadow-glow"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Conta Recorrente
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
