@@ -53,45 +53,44 @@ export function AccountCard({ account, onTogglePaid, onDelete, readOnly = false 
       'bg-card'
     }`}>
       <CardContent className="p-4">
-        <div className="space-y-3">
-          {/* Header com nome e badges */}
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold text-lg flex-1 min-w-0">{account.name}</h3>
-            {account.isRecurring && (
-              <Badge variant="outline" className="text-xs whitespace-nowrap">
-                <Repeat className="w-3 h-3 mr-1" />
-                Recorrente
+        <div className="flex items-center justify-between">
+          <div className="flex-1 space-y-2 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-semibold text-lg">{account.name}</h3>
+              {account.isRecurring && (
+                <Badge variant="outline" className="text-xs whitespace-nowrap">
+                  <Repeat className="w-3 h-3 mr-1" />
+                  Recorrente
+                </Badge>
+              )}
+              <Badge className={`${getCategoryColor(account.category)} whitespace-nowrap`}>
+                {account.category}
               </Badge>
-            )}
-            <Badge className={`${getCategoryColor(account.category)} whitespace-nowrap`}>
-              {account.category}
-            </Badge>
-          </div>
-          
-          {/* Informações financeiras */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <DollarSign className="w-4 h-4" />
-              <span className="font-medium text-foreground">
-                R$ {account.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </span>
             </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              <span className={isOverdue ? 'text-destructive font-medium' : ''}>
-                {format(dueDate, "dd 'de' MMMM", { locale: ptBR })}
-              </span>
+            
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <DollarSign className="w-4 h-4" />
+                <span className="font-medium text-foreground">
+                  R$ {account.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                <span className={isOverdue ? 'text-destructive font-medium' : ''}>
+                  {format(dueDate, "dd 'de' MMMM", { locale: ptBR })}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Botões de ação */}
           {!readOnly && (
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex items-center gap-2 ml-2">
               <Button
                 variant={account.isPaid ? "default" : "outline"}
                 size="sm"
                 onClick={() => onTogglePaid(account.id)}
-                className={`transition-smooth flex-1 sm:flex-initial ${
+                className={`transition-smooth ${
                   account.isPaid 
                     ? 'bg-success hover:bg-success/90 text-success-foreground' 
                     : 'hover:shadow-glow'
@@ -118,7 +117,6 @@ export function AccountCard({ account, onTogglePaid, onDelete, readOnly = false 
                 className="text-destructive hover:text-destructive-foreground hover:bg-destructive transition-smooth"
               >
                 <Trash2 className="w-4 h-4" />
-                <span className="sr-only">Excluir</span>
               </Button>
             </div>
           )}
