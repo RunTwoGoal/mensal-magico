@@ -13,7 +13,7 @@ const Index = () => {
             <DollarSign className="h-10 w-10 text-primary-foreground" />
           </div>
           <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
-            Mensal <span className="gradient-primary bg-clip-text text-transparent">Mágico</span>
+            Mensal <span className="gradient-primary bg-clip-text text-sky-100/60">Mágico</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Transforme o caos das suas contas mensais em uma experiência organizada e intuitiva. 

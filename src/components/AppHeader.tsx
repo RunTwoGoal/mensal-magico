@@ -4,14 +4,17 @@ import { Card } from "@/components/ui/card";
 import { DollarSign, Home, Repeat, History, LogOut, Menu } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "../auth/AuthContext";
 
 const AppHeader = () => {
+  const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     // Aqui você faria o logout na sua API
+    logout();
     console.log("Logout");
     navigate("/");
   };

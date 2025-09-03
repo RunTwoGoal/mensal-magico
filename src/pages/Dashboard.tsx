@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,49 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AddAccountDialog } from "@/components/AddAccountDialog";
 import { AccountCard } from "@/components/AccountCard";
 import AppHeader from "@/components/AppHeader";
+import api from "@/api";
+import { ca } from "date-fns/locale";
+
+// Ajuste isso conforme o payload real da sua API
+type ApiAccount = {
+  id: string | number;
+  name: string;
+  amount: number;
+  dueDate?: string;       // ex: "2025-09-10"
+  category?: string;
+  isRecurring?: boolean;
+  paid?: boolean;
+  isPaid?: boolean;
+  status?: "paid" | "pending";
+};
+type ApiResponse = ApiAccount[] | { accounts: ApiAccount[] };
+type UiAccount = {
+  id: string | number;
+  name: string;
+  amount: number;
+  dueDate: string;
+  category: string;
+  isRecurring: boolean;
+  isPaid: boolean;
+  status: "paid" | "pending";
+};
+
+const toUi = (a: ApiAccount): UiAccount => {
+  const dueDate = a.dueDate ?? "";
+  const isPaid = a.isPaid ?? a.paid ?? false;
+  const isRecurring = a.isRecurring ?? false;
+  const status = a.status ?? (isPaid ? "paid" : "pending");
+  return {
+    id: a.id,
+    name: a.name,
+    amount: Number(a.amount ?? 0),
+    dueDate,
+    category: a.category ?? "Outros",
+    isRecurring,
+    isPaid,
+    status,
+  };
+};
 
 // Mock data - substitua pela chamada à sua API
 const mockAccounts = [
@@ -68,18 +112,65 @@ const mockAccounts = [
 ];
 
 const Dashboard = () => {
-  const [accounts, setAccounts] = useState(mockAccounts);
+  const navigate = useNavigate();
+  const [accounts, setAccounts] = useState<UiAccount[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [monthlyBudget, setMonthlyBudget] = useState(3000); // Valor padrão
+  const [monthlyBudget, setMonthlyBudget] = useState(0); // Valor padrão
   const [isEditingBudget, setIsEditingBudget] = useState(false);
 
   const currentMonth = new Date().toLocaleDateString('pt-BR', { 
     month: 'long', 
     year: 'numeric' 
   });
+
+  const monthYear = useMemo(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  }, []);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      // setLoading(true);
+      // setErr(null);
+      try {
+        const { data } = await api.get<ApiAccount[]>("/account/", {
+          params: { month_year: monthYear },
+        });
+        console.log("Contas carregadas:", data);
+        const list: ApiAccount[] = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.accounts)
+        ? (data as any).accounts
+        : [];
+
+      setAccounts(list.map(toUi));
+      } catch (e: any) {
+        console.error("Erro ao carregar contas:", e);
+        // setErr(e?.response?.data?.detail || "Falha ao carregar contas.");
+      } finally {
+        // setLoading(false);
+      }
+    };
+    fetchAccounts();
+
+    const fetchBudget = async () => {
+      try {
+        const { data } = await api.get<{ budget: { amount: number } }>("/budgets/", { params: { month_year: monthYear } });
+        console.log("Orçamento carregado:", data);
+        setMonthlyBudget(data.budget.amount ?? 0);
+      } catch (e: any) {
+        console.error("Erro ao carregar orçamento:", e);
+      }
+    };
+    fetchBudget();
+  }, [monthYear]);
+
+
 
   // Cálculos do dashboard
   const totalAmount = accounts.reduce((sum, account) => sum + account.amount, 0);
@@ -106,27 +197,75 @@ const Dashboard = () => {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const handleAddAccount = (newAccount: any) => {
-    const account = {
-      id: Date.now(),
+  const handleAddAccount = async (newAccount: any) => {
+    try {
+      console.log("newAccount",newAccount)
+      const {data} = await api.post<ApiAccount>("/account/insert", { ...newAccount } );
+      console.log("Conta:", data);
+      newAccount = toUi(data["account"]);
+      const account = {
       ...newAccount,
       isPaid: false,
       status: "pending"
     };
     setAccounts([...accounts, account]);
     setIsAddDialogOpen(false);
+    }
+    catch (e) {
+      console.error("Erro ao adicionar conta:", e);
+    }
+    
   };
 
-  const handleTogglePaid = (accountId: number) => {
-    setAccounts(accounts.map(account => 
+  const handleTogglePaid = async (accountId: number) => {
+    try{
+      setAccounts(accounts.map(account => 
+      account.id === accountId 
+        ? { ...account, isPaid: !account.isPaid, status: account.isPaid ? "pending" : "paid" }
+        : account
+      ));
+      const stat = !!accounts.find(a => a.id === accountId)?.isPaid;
+      const {data} = await api.post<ApiAccount>(`account/${accountId}/pay`, null, { params: {status: !stat} });
+      console.log("Conta atualizada:", data);
+      if (!data) throw new Error("Resposta inválida da API");
+    }
+    catch(e){
+      console.error("Erro ao atualizar conta:", e);
+      setAccounts(accounts.map(account => 
       account.id === accountId 
         ? { ...account, isPaid: !account.isPaid, status: account.isPaid ? "pending" : "paid" }
         : account
     ));
+    }
   };
 
-  const handleDeleteAccount = (accountId: number) => {
-    setAccounts(accounts.filter(account => account.id !== accountId));
+  const handleDeleteAccount = async (accountId: number) => {
+    try{
+      const {data} = await api.delete(`account/${accountId}/delete`);
+      console.log("Conta deletada:", data);
+      if (!data) throw new Error("Resposta inválida da API");
+      if (data["success"]=== true)
+        setAccounts(accounts.filter(account => account.id !== accountId));
+    }
+    catch(e){
+      console.error("Erro ao deletar conta:", e);
+    }
+  };
+
+  const handleBudgetSave = async () => {
+    if (!monthlyBudget || isNaN(monthlyBudget)) {
+      console.error("Valor de orçamento inválido");
+      return;
+    }
+    try {
+      const {data} = await api.post("/budgets/update",null, {params:{budget: monthlyBudget, month_year:monthYear }});
+      console.log("Orçamento salvo:", data);
+      if (!data) throw new Error("Resposta inválida da API");
+      setIsEditingBudget(false);
+    } catch (e) {
+      console.error("Erro ao salvar orçamento:", e);
+    }
+
   };
 
   return (
@@ -143,7 +282,7 @@ const Dashboard = () => {
           <div className="flex gap-2">
             <Button 
               variant="outline"
-              onClick={() => window.location.href = '/recurring'}
+              onClick={() => navigate("/recurring", { replace: true })}
               className="transition-smooth"
             >
               <Calendar className="mr-2 h-4 w-4" />
@@ -191,7 +330,7 @@ const Dashboard = () => {
                     />
                     <Button
                       size="sm"
-                      onClick={() => setIsEditingBudget(false)}
+                      onClick={handleBudgetSave}
                     >
                       OK
                     </Button>

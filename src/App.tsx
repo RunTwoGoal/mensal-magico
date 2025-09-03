@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import RecurringAccounts from "./pages/RecurringAccounts";
 import History from "./pages/History";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import HomeRedirect from "./routes/HomeRedirect";
 
 const queryClient = new QueryClient();
 
@@ -21,11 +23,16 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          {/* <Route path="/" element={<HomeRedirect />} /> */}
+          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/recurring" element={<RecurringAccounts />} />
-          <Route path="/history" element={<History />} />
+
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/recurring" element={<RecurringAccounts />} />
+            <Route path="/history" element={<History />} />
+          </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

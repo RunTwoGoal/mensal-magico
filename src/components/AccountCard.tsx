@@ -29,7 +29,7 @@ interface AccountCardProps {
 }
 
 export function AccountCard({ account, onTogglePaid, onDelete, readOnly = false }: AccountCardProps) {
-  const dueDate = new Date(account.dueDate);
+  const dueDate = new Date(account.dueDate + 'T00:00:00');
   const isOverdue = !account.isPaid && dueDate < new Date();
 
   const getCategoryColor = (category: string) => {
