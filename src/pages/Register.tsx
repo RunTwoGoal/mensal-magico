@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate  } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, DollarSign } from "lucide-react";
+import axios from "axios";
+import { useAuth } from "../auth/AuthContext";
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { register } = useAuth(); 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -15,14 +19,32 @@ const Register = () => {
     password: "",
     confirmPassword: ""
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("As senhas não coincidem!");
       return;
     }
     // Aqui você fará a chamada para sua API de registro
+    try {
+      setLoading(true);
+      await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+       navigate("/dashboard", { replace: true });
+      // const res = await axios.post("http://localhost:8000/auth/register", formData);
+      // console.log("Resposta:", res.data);
+      // const { user, token, refresh_token } = res.data;
+    } catch (err) {
+      console.error("Erro:", err);
+    }
+    finally {
+      setLoading(false);
+    }
     console.log("Register attempt:", formData);
   };
 

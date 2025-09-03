@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, DollarSign } from "lucide-react";
+import { useAuth } from "../auth/AuthContext";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,17 +14,23 @@ const Login = () => {
     password: ""
   });
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Aqui você fará a chamada para sua API de login
-    console.log("Login attempt:", formData);
-    
-    // Simular login bem-sucedido - substitua pela sua lógica de API
-    if (formData.email && formData.password) {
-      // Após login bem-sucedido, redirecionar para dashboard
-      navigate("/dashboard");
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setErr(null);
+      try {
+        // setLoading(true);
+        await login({ email: formData.email, password: formData.password });
+        navigate("/dashboard", { replace: true });
+      } catch (error: any) {
+        console.error("Erro:", error)
+        setErr(error?.response?.data?.detail || "Erro ao entrar. Verifique suas credenciais.");
+      } finally {
+        // setLoading(false);
+      }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
