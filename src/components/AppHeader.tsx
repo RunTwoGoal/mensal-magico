@@ -28,7 +28,7 @@ const AppHeader = () => {
       icon: Repeat,
     },
     {
-      title: "Histórico",
+      title: "Contas",
       href: "/history",
       icon: History,
     },

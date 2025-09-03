@@ -23,31 +23,56 @@ import AppHeader from "@/components/AppHeader";
 
 // Mock data - substitua pela chamada à sua API
 const mockHistoricalData = {
+  "2023-11": [
+    { id: 1, name: "Aluguel", amount: 1200.00, dueDate: "2023-11-05", category: "Moradia", isRecurring: true, isPaid: true, status: "paid" },
+    { id: 2, name: "Energia", amount: 155.30, dueDate: "2023-11-15", category: "Utilities", isRecurring: true, isPaid: true, status: "paid" }
+  ],
   "2023-12": [
-    { id: 1, name: "Aluguel", amount: 1200.00, dueDate: "2023-12-05", category: "Moradia", isRecurring: true, isPaid: true, status: "paid" },
-    { id: 2, name: "Energia", amount: 165.30, dueDate: "2023-12-15", category: "Utilities", isRecurring: true, isPaid: true, status: "paid" }
+    { id: 3, name: "Aluguel", amount: 1200.00, dueDate: "2023-12-05", category: "Moradia", isRecurring: true, isPaid: true, status: "paid" },
+    { id: 4, name: "Energia", amount: 165.30, dueDate: "2023-12-15", category: "Utilities", isRecurring: true, isPaid: true, status: "paid" }
   ],
   "2024-01": [
-    { id: 3, name: "Aluguel", amount: 1200.00, dueDate: "2024-01-05", category: "Moradia", isRecurring: true, isPaid: true, status: "paid" },
-    { id: 4, name: "Energia", amount: 180.50, dueDate: "2024-01-15", category: "Utilities", isRecurring: true, isPaid: false, status: "pending" },
-    { id: 5, name: "Supermercado", amount: 450.00, dueDate: "2024-01-20", category: "Alimentação", isRecurring: false, isPaid: false, status: "pending" }
+    { id: 5, name: "Aluguel", amount: 1200.00, dueDate: "2024-01-05", category: "Moradia", isRecurring: true, isPaid: true, status: "paid" },
+    { id: 6, name: "Energia", amount: 180.50, dueDate: "2024-01-15", category: "Utilities", isRecurring: true, isPaid: false, status: "pending" },
+    { id: 7, name: "Supermercado", amount: 450.00, dueDate: "2024-01-20", category: "Alimentação", isRecurring: false, isPaid: false, status: "pending" }
   ],
   "2024-02": [
-    { id: 6, name: "Aluguel", amount: 1200.00, dueDate: "2024-02-05", category: "Moradia", isRecurring: true, isPaid: false, status: "future" },
-    { id: 7, name: "Energia", amount: 175.00, dueDate: "2024-02-15", category: "Utilities", isRecurring: true, isPaid: false, status: "future" }
+    { id: 8, name: "Aluguel", amount: 1200.00, dueDate: "2024-02-05", category: "Moradia", isRecurring: true, isPaid: false, status: "future" },
+    { id: 9, name: "Energia", amount: 175.00, dueDate: "2024-02-15", category: "Utilities", isRecurring: true, isPaid: false, status: "future" },
+    { id: 10, name: "Internet", amount: 89.90, dueDate: "2024-02-20", category: "Utilities", isRecurring: true, isPaid: false, status: "future" }
   ],
   "2024-03": [
-    { id: 8, name: "Aluguel", amount: 1200.00, dueDate: "2024-03-05", category: "Moradia", isRecurring: true, isPaid: false, status: "future" },
-    { id: 9, name: "Energia", amount: 175.00, dueDate: "2024-03-15", category: "Utilities", isRecurring: true, isPaid: false, status: "future" }
+    { id: 11, name: "Aluguel", amount: 1200.00, dueDate: "2024-03-05", category: "Moradia", isRecurring: true, isPaid: false, status: "future" },
+    { id: 12, name: "Energia", amount: 175.00, dueDate: "2024-03-15", category: "Utilities", isRecurring: true, isPaid: false, status: "future" },
+    { id: 13, name: "Internet", amount: 89.90, dueDate: "2024-03-20", category: "Utilities", isRecurring: true, isPaid: false, status: "future" }
+  ],
+  "2024-04": [
+    { id: 14, name: "Aluguel", amount: 1200.00, dueDate: "2024-04-05", category: "Moradia", isRecurring: true, isPaid: false, status: "future" },
+    { id: 15, name: "Energia", amount: 175.00, dueDate: "2024-04-15", category: "Utilities", isRecurring: true, isPaid: false, status: "future" },
+    { id: 16, name: "Internet", amount: 89.90, dueDate: "2024-04-20", category: "Utilities", isRecurring: true, isPaid: false, status: "future" }
+  ],
+  "2024-05": [
+    { id: 17, name: "Aluguel", amount: 1200.00, dueDate: "2024-05-05", category: "Moradia", isRecurring: true, isPaid: false, status: "future" },
+    { id: 18, name: "Energia", amount: 175.00, dueDate: "2024-05-15", category: "Utilities", isRecurring: true, isPaid: false, status: "future" },
+    { id: 19, name: "Internet", amount: 89.90, dueDate: "2024-05-20", category: "Utilities", isRecurring: true, isPaid: false, status: "future" }
+  ],
+  "2024-06": [
+    { id: 20, name: "Aluguel", amount: 1200.00, dueDate: "2024-06-05", category: "Moradia", isRecurring: true, isPaid: false, status: "future" },
+    { id: 21, name: "Energia", amount: 175.00, dueDate: "2024-06-15", category: "Utilities", isRecurring: true, isPaid: false, status: "future" },
+    { id: 22, name: "Internet", amount: 89.90, dueDate: "2024-06-20", category: "Utilities", isRecurring: true, isPaid: false, status: "future" }
   ]
 };
 
 // Mock data para orçamentos mensais - substitua pela chamada à sua API
 const mockMonthlyBudgets = {
+  "2023-11": 2600,
   "2023-12": 2800,
   "2024-01": 3000,
   "2024-02": 3200,
-  "2024-03": 3000
+  "2024-03": 3000,
+  "2024-04": 3000,
+  "2024-05": 3000,
+  "2024-06": 3000
 };
 
 const History = () => {
@@ -144,9 +169,17 @@ const History = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Histórico de Contas</h1>
-            <p className="text-muted-foreground">Visualize suas contas passadas e futuras</p>
+            <h1 className="text-3xl font-bold text-foreground">Contas</h1>
+            <p className="text-muted-foreground">Visualize e gerencie suas contas passadas, presentes e futuras</p>
           </div>
+          {isFutureMonth() && (
+            <div className="flex items-center gap-2 text-accent">
+              <Calendar className="w-5 h-5" />
+              <Badge variant="outline" className="text-accent border-accent">
+                Planejamento Futuro
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* Month Navigation */}
@@ -424,12 +457,20 @@ const History = () => {
         {/* Accounts List */}
         <Card className="shadow-card animate-slide-up">
           <CardHeader>
-            <CardTitle>Contas de {monthName}</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Contas de {monthName}</span>
+              {isFutureMonth() && (
+                <Badge variant="outline" className="text-accent border-accent">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Planejamento
+                </Badge>
+              )}
+            </CardTitle>
             <CardDescription>
               {isFutureMonth() 
-                ? "Contas planejadas para este mês"
+                ? "Contas planejadas para este mês - você poderá editá-las quando chegarem"
                 : isCurrentMonth() 
-                  ? "Suas contas do mês atual"
+                  ? "Suas contas do mês atual - clique para marcar como pago"
                   : "Histórico de contas pagas e pendentes"
               }
             </CardDescription>
@@ -437,21 +478,33 @@ const History = () => {
           <CardContent>
             <div className="space-y-4">
               {filteredAccounts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {currentAccounts.length === 0 
-                    ? "Nenhuma conta cadastrada para este mês"
-                    : "Nenhuma conta encontrada com os filtros aplicados"
-                  }
+                <div className="text-center py-8">
+                  <div className="text-muted-foreground mb-4">
+                    {currentAccounts.length === 0 
+                      ? (isFutureMonth() 
+                          ? "Nenhuma conta planejada para este mês ainda"
+                          : "Nenhuma conta registrada para este mês") 
+                      : "Nenhuma conta encontrada com os filtros aplicados"
+                    }
+                  </div>
+                  {currentAccounts.length === 0 && !isFutureMonth() && (
+                    <div className="space-x-2">
+                      <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
+                        Ir para Dashboard
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 filteredAccounts.map((account) => (
-                  <AccountCard
-                    key={account.id}
-                    account={account}
-                    onTogglePaid={handleTogglePaid}
-                    onDelete={handleDeleteAccount}
-                    readOnly={!isCurrentMonth()}
-                  />
+                  <div key={account.id} className={isFutureMonth() ? "opacity-75" : ""}>
+                    <AccountCard
+                      account={account}
+                      onTogglePaid={handleTogglePaid}
+                      onDelete={handleDeleteAccount}
+                      readOnly={!isCurrentMonth()}
+                    />
+                  </div>
                 ))
               )}
             </div>
