@@ -51,15 +51,24 @@ type UiAccount = {
   status: "paid" | "pending";
 };
 
-const toUi = (a: ApiAccount): UiAccount => {
+const toUi = (a: ApiAccount, index?: number): UiAccount => {
   const dueDate = a.dueDate ?? "";
   const isPaid = a.isPaid ?? a.paid ?? false;
   const isRecurring = a.isRecurring ?? false;
   const status = a.status ?? (isPaid ? "paid" : "pending");
+  
+  // Garante que o ID seja sempre um número válido
+  let id = Number(a.id);
+  if (isNaN(id) || id <= 0) {
+    // Se o ID for inválido, usa o timestamp + index como fallback
+    id = Date.now() + (index ?? 0);
+    console.warn(`ID inválido detectado para conta "${a.name}", usando ID gerado: ${id}`);
+  }
+  
   return {
-    id: Number(a.id),
-    name: a.name,
-    amount: Number(a.amount ?? 0),
+    id,
+    name: a.name || "Conta sem nome",
+    amount: Number(a.amount ?? 0) || 0,
     dueDate,
     category: a.category ?? "Outros",
     isRecurring,
@@ -150,7 +159,7 @@ const Dashboard = () => {
         ? (data as any).accounts
         : [];
 
-      setAccounts(list.map(toUi));
+      setAccounts(list.map((account, index) => toUi(account, index)));
       } catch (e: any) {
         console.error("Erro ao carregar contas:", e);
       } finally {
