@@ -212,22 +212,49 @@ const Dashboard = () => {
 
   const handleAddAccount = async (newAccount: any) => {
     try {
-      console.log("newAccount",newAccount)
+      console.log("Dados enviados para API:", newAccount);
       const {data} = await api.post<ApiAccount>("/account/insert", { ...newAccount } );
-      console.log("Conta:", data);
-      newAccount = toUi(data["account"]);
+      console.log("Resposta completa da API:", data);
+      
+      // Verificar diferentes estruturas possíveis de resposta da API
+      let apiAccount: ApiAccount;
+      if (data && typeof data === 'object') {
+        // Se a resposta tem uma propriedade 'account'
+        if ('account' in data) {
+          apiAccount = (data as any).account;
+          console.log("Conta extraída de data.account:", apiAccount);
+        } else {
+          // Se a resposta é diretamente a conta
+          apiAccount = data as ApiAccount;
+          console.log("Conta extraída diretamente de data:", apiAccount);
+        }
+      } else {
+        throw new Error("Resposta da API inválida");
+      }
+
+      // Verificar se o ID existe e é válido
+      if (!apiAccount.id || (typeof apiAccount.id !== 'string' && typeof apiAccount.id !== 'number')) {
+        console.error("ID inválido retornado pela API:", apiAccount.id);
+        throw new Error("API retornou ID inválido");
+      }
+
+      console.log("ID da conta:", apiAccount.id, "Tipo:", typeof apiAccount.id);
+      
+      const processedAccount = toUi(apiAccount);
+      console.log("Conta processada:", processedAccount);
+      
       const account = {
-      ...newAccount,
-      isPaid: false,
-      status: "pending"
-    };
-    setAccounts([...accounts, account]);
-    setIsAddDialogOpen(false);
+        ...processedAccount,
+        isPaid: false,
+        status: "pending" as const
+      };
+      
+      setAccounts([...accounts, account]);
+      setIsAddDialogOpen(false);
     }
     catch (e) {
       console.error("Erro ao adicionar conta:", e);
     }
-    
   };
 
   const handleTogglePaid = async (accountId: number) => {
