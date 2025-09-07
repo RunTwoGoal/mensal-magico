@@ -4,7 +4,7 @@ import { useAuth } from "@/auth/AuthContext";
 export default function HomeRedirect() {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? (
-    <Navigate to="/dashboard" replace />
+    <Navigate to="/accounts" replace />
   ) : (
     <Navigate to="/" replace />
   );

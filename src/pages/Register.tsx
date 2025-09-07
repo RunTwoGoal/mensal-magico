@@ -35,7 +35,7 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
       });
-       navigate("/dashboard", { replace: true });
+       navigate("/accounts", { replace: true });
       // const res = await axios.post("http://localhost:8000/auth/register", formData);
       // console.log("Resposta:", res.data);
       // const { user, token, refresh_token } = res.data;

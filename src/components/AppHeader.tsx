@@ -21,19 +21,14 @@ const AppHeader = () => {
 
   const navItems = [
     {
-      title: "Dashboard",
-      href: "/dashboard",
+      title: "Contas",
+      href: "/accounts",
       icon: Home,
     },
     {
       title: "Contas Recorrentes",
       href: "/recurring",
       icon: Repeat,
-    },
-    {
-      title: "Contas",
-      href: "/history",
-      icon: History,
     },
   ];
 
@@ -44,7 +39,7 @@ const AppHeader = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/dashboard" className="flex items-center space-x-2">
+          <Link to="/accounts" className="flex items-center space-x-2">
             <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-primary-foreground" />
             </div>

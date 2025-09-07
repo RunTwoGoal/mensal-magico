@@ -125,8 +125,8 @@ const Index = () => {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="transition-smooth">
-                  <Link to="/dashboard">
-                    Ver Dashboard
+                  <Link to="/accounts">
+                    Ver Contas
                   </Link>
                 </Button>
               </div>
@@ -134,11 +134,8 @@ const Index = () => {
                 <Link to="/recurring" className="hover:text-foreground transition-colors">
                   • Contas Recorrentes
                 </Link>
-                <Link to="/history" className="hover:text-foreground transition-colors">
-                  • Histórico Mensal
-                </Link>
-                <Link to="/dashboard" className="hover:text-foreground transition-colors">
-                  • Dashboard Completo
+                <Link to="/accounts" className="hover:text-foreground transition-colors">
+                  • Gerenciar Contas
                 </Link>
               </div>
             </CardHeader>

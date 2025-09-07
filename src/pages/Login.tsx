@@ -24,7 +24,7 @@ const Login = () => {
       try {
         // setLoading(true);
         await login({ email: formData.email, password: formData.password });
-        navigate("/dashboard", { replace: true });
+        navigate("/accounts", { replace: true });
       } catch (error: any) {
         console.error("Erro:", error)
         setErr(error?.response?.data?.detail || "Erro ao entrar. Verifique suas credenciais.");
