@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { DollarSign, Home, Repeat, History, LogOut, Menu } from "lucide-react";
+import { DollarSign, Home, Repeat, History, LogOut, Menu, User } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "../auth/AuthContext";
@@ -29,6 +29,11 @@ const AppHeader = () => {
       title: "Contas Recorrentes",
       href: "/recurring",
       icon: Repeat,
+    },
+    {
+      title: "Perfil",
+      href: "/profile",
+      icon: User,
     },
   ];
 

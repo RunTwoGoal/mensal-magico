@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Accounts from "./pages/Accounts";
 import RecurringAccounts from "./pages/RecurringAccounts";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import HomeRedirect from "./routes/HomeRedirect";
@@ -30,6 +31,7 @@ const App = () => (
           <Route element={<ProtectedRoute />}>
             <Route path="/accounts" element={<Accounts />} />
             <Route path="/recurring" element={<RecurringAccounts />} />
+            <Route path="/profile" element={<Profile />} />
             {/* Legacy routes for compatibility */}
             <Route path="/dashboard" element={<Accounts />} />
             <Route path="/history" element={<Accounts />} />
