@@ -361,7 +361,9 @@ const Accounts = () => {
 
         {/* Budget Section */}
         {(accounts.length > 0 || isLoadingAccounts) && (
-          <Card className="shadow-card animate-fade-in border-l-4 border-l-primary">
+          <Card className={`shadow-card animate-fade-in border-l-4 border-l-primary ${
+            !isCurrentMonth() ? 'opacity-60 pointer-events-none' : ''
+          }`}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
