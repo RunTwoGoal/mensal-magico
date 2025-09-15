@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import {
 import { AddAccountDialog } from "@/components/AddAccountDialog";
 import { EditRecurringAccountDialog } from "@/components/EditRecurringAccountDialog";
 import AppHeader from "@/components/AppHeader";
+import api from "@/api";
+
+
 
 // Mock data - substitua pela chamada à sua API
 const mockRecurringAccounts = [
@@ -51,21 +54,117 @@ const mockRecurringAccounts = [
     createdDate: "2024-01-01"
   }
 ];
+type RecurringApi = {
+  id: string | number;
+  name: string;
+  amount: number;
+  day?: number | null;
+  category?: string;
+  repeatType?: string;               // ex.: "forever" | "limited"
+  repeatCount?: number | null;
+  remainingOccurrences?: number | null;
+  createdDate?: string | null;       // às vezes a API pode mandar este...
+  created_at?: string | null;        // ...ou este (como no Mongo)
+};
 
+// Seu UI type continua exigindo `day: number`
+type UiRecurring = {
+  id: string | number;
+  name: string;
+  amount: number;
+  day: number;                       // sempre número
+  category: string;
+  repeatType?: string;
+  repeatCount?: number;
+  remainingOccurrences?: number;
+  createdDate?: string;              // string (ISO) para exibir
+};
+
+// Helper para pegar o dia com fallback seguro (1–28 para evitar meses curtos, se preferir)
+const coerceDay = (day?: number | null): number => {
+  if (typeof day === "number" && !Number.isNaN(day) && day >= 1 && day <= 31) return day;
+  // fallback: usa o dia de hoje, ou 1
+  const today = new Date().getDate();
+  return Math.min(Math.max(today, 1), 31);
+};
+
+// Converte RecurringApi -> UiRecurring (com defaults)
+const toUi = (item: RecurringApi): UiRecurring => {
+  const created =
+    item.created_at ??
+    item.createdDate ??
+    null;
+
+  return {
+    id: item.id,
+    name: item.name,
+    amount: Number(item.amount ?? 0),
+    day: coerceDay(item.day),                         // <-- garante number
+    category: item.category ?? "Outros",
+    repeatType: item.repeatType ?? "forever",
+    repeatCount: item.repeatCount ?? undefined,
+    remainingOccurrences: item.remainingOccurrences ?? undefined,
+    createdDate: created ? String(created) : undefined,
+  };
+};
+
+const fmt = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "short",    // 10/09/2025
+  timeStyle: "short",    // 21:24
+  timeZone: "America/Sao_Paulo", // Fuso fixo
+});
+
+export function formatIsoToLocal(iso?: string) {
+  if (!iso) return "";
+  return fmt.format(new Date(iso));
+}
 const RecurringAccounts = () => {
-  const [accounts, setAccounts] = useState(mockRecurringAccounts);
+  const [accounts, setAccounts] = useState<UiRecurring[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any>(null);
 
-  const handleAddAccount = (newAccount: any) => {
+  useEffect(() => {
+  const fetchRecurring = async () => {
+    try {
+      const { data } = await api.get<RecurringApi[] | { recurringAccounts: RecurringApi[] }>("/recurring/");
+      console.log(data);
+      const list: RecurringApi[] = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.recurringAccounts)
+        ? (data as any).recurringAccounts
+        : [];
+
+      const ui = list.map(toUi);
+      
+      setAccounts(ui);
+    } catch (e: any) {
+      console.error("Erro ao carregar contas recorrentes:", e);
+    }
+  };
+  fetchRecurring();
+}, []);
+
+
+  const handleAddAccount = async (newAccount: any) => {
+
     const account = {
       id: Date.now(),
       ...newAccount,
       createdDate: new Date().toISOString().split('T')[0]
     };
+
+    try{
+      console.log("Adicionando conta recorrente:", newAccount);
+      const {data} = await api.post<RecurringApi>("/recurring/insert", { ...newAccount } );
+      console.log("Conta recorrente adicionada com sucesso:", data);
+    }
+    catch(error){
+      console.error("Erro ao adicionar conta recorrente:", error);
+    }
     setAccounts([...accounts, account]);
     setIsAddDialogOpen(false);
   };
+
 
   const handleEditAccount = (updatedAccount: any) => {
     setAccounts(accounts.map(account => 
@@ -75,6 +174,7 @@ const RecurringAccounts = () => {
     ));
     setEditingAccount(null);
   };
+
 
   const handleDeleteAccount = (accountId: number) => {
     const account = accounts.find(acc => acc.id === accountId);
@@ -89,6 +189,7 @@ const RecurringAccounts = () => {
 
     if (confirm(confirmMessage)) {
       setAccounts(accounts.filter(acc => acc.id !== accountId));
+
     }
   };
 
@@ -229,7 +330,9 @@ const RecurringAccounts = () => {
                             </div>
                             {account.repeatType === 'limited' && (
                               <div className="text-xs">
-                                Total: {account.repeatCount} vezes | Criada em {new Date(account.createdDate).toLocaleDateString('pt-BR')}
+                                Total: {account.repeatCount} vezes | Criada em {account.createdDate 
+  ? new Date(account.createdDate).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) 
+  : '—'}
                               </div>
                             )}
                           </div>
