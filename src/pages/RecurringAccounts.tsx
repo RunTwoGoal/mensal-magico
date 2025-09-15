@@ -175,9 +175,21 @@ const RecurringAccounts = () => {
     setEditingAccount(null);
   };
 
-  const handleDeleteAccount = (accountId: string | number) => {
-    if (confirm("Tem certeza que deseja excluir esta conta recorrente?")) {
-      setAccounts(accounts.filter(account => account.id !== accountId));
+
+  const handleDeleteAccount = (accountId: number) => {
+    const account = accounts.find(acc => acc.id === accountId);
+    if (!account) return;
+
+    let confirmMessage = "Tem certeza que deseja excluir esta conta recorrente?";
+    
+    // Se é uma conta com parcelas limitadas e tem parcelas restantes
+    if (account.repeatType === 'limited' && account.remainingOccurrences && account.remainingOccurrences > 0) {
+      confirmMessage = `Tem certeza que deseja excluir esta conta recorrente?\n\nIsto irá deletar também as ${account.remainingOccurrences} parcelas futuras restantes.`;
+    }
+
+    if (confirm(confirmMessage)) {
+      setAccounts(accounts.filter(acc => acc.id !== accountId));
+
     }
   };
 
