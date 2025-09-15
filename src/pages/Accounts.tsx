@@ -41,7 +41,7 @@ type ApiAccount = {
 };
 
 type UiAccount = {
-  id: number;
+  id: string | number;
   name: string;
   amount: number;
   dueDate: string;
@@ -57,11 +57,11 @@ const toUi = (a: ApiAccount, index?: number): UiAccount => {
   const isRecurring = a.isRecurring ?? false;
   const status = a.status ?? (isPaid ? "paid" : "pending");
   
-  let id = Number(a.id);
-  if (isNaN(id) || id <= 0) {
-    id = Date.now() + (index ?? 0);
-    console.warn(`ID inválido detectado para conta "${a.name}", usando ID gerado: ${id}`);
-  }
+  let id = a.id;
+  // if (isNaN(id) || id <= 0) {
+  //   id = Date.now() + (index ?? 0);
+  //   console.warn(`ID inválido detectado para conta "${a.name}", usando ID gerado: ${id}`);
+  // }
   
   return {
     id,
@@ -154,11 +154,17 @@ const Accounts = () => {
         setMonthlyBudget(data.budget.amount ?? 0);
       } catch (e: any) {
         console.error("Erro ao carregar orçamento:", e);
+        if (e.response?.status === 404) {
+          setMonthlyBudget(0);
+        }
       } finally {
         setIsLoadingBudget(false);
       }
     };
-    fetchBudget();
+    if (!isFutureMonth())
+      fetchBudget();
+    else
+      setMonthlyBudget(0);
   }, [monthYear]);
 
   // Calculations
@@ -295,7 +301,7 @@ const Accounts = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              {isCurrentMonth() ? "Dashboard" : "Contas"}
+              Contas
             </h1>
             <p className="text-muted-foreground capitalize">
               {isCurrentMonth() 
