@@ -176,7 +176,7 @@ const RecurringAccounts = () => {
   };
 
 
-  const handleDeleteAccount = (accountId: number) => {
+  const handleDeleteAccount = (accountId: string | number) => {
     const account = accounts.find(acc => acc.id === accountId);
     if (!account) return;
 

@@ -192,9 +192,8 @@ const Accounts = () => {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  // Handlers (only active for current month)
+  // Handlers
   const handleAddAccount = async (newAccount: any) => {
-    if (!isCurrentMonth()) return;
     
     try {
       console.log("Dados enviados para API:", newAccount);
@@ -238,8 +237,7 @@ const Accounts = () => {
     }
   };
 
-  const handleTogglePaid = async (accountId: number) => {
-    if (!isCurrentMonth()) return;
+  const handleTogglePaid = async (accountId: string | number) => {
     
     try{
       setAccounts(accounts.map(account => 
@@ -262,8 +260,7 @@ const Accounts = () => {
     }
   };
 
-  const handleDeleteAccount = async (accountId: number) => {
-    if (!isCurrentMonth()) return;
+  const handleDeleteAccount = async (accountId: string | number) => {
     
     try{
       const {data} = await api.delete(`account/${accountId}/delete`);
@@ -278,8 +275,8 @@ const Accounts = () => {
   };
 
   const handleBudgetSave = async () => {
-    if (!monthlyBudget || isNaN(monthlyBudget) || !isCurrentMonth()) {
-      console.error("Valor de orçamento inválido ou não é mês atual");
+    if (!monthlyBudget || isNaN(monthlyBudget)) {
+      console.error("Valor de orçamento inválido");
       return;
     }
     try {
@@ -303,34 +300,27 @@ const Accounts = () => {
             <h1 className="text-3xl font-bold text-foreground">
               Contas
             </h1>
-            <p className="text-muted-foreground capitalize">
-              {isCurrentMonth() 
-                ? monthName
-                : isFutureMonth() 
-                ? `${monthName} - Planejamento Futuro`
-                : `${monthName} - Histórico`
-              }
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {isFutureMonth() && (
-              <Badge variant="outline" className="text-accent border-accent">
-                <Calendar className="w-4 h-4 mr-1" />
-                Planejamento
-              </Badge>
-            )}
-            
-            {isCurrentMonth() && (
-              <Button 
-                onClick={() => setIsAddDialogOpen(true)}
-                className="transition-smooth hover:shadow-glow"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Nova Conta
-              </Button>
-            )}
-          </div>
+             <p className="text-muted-foreground capitalize">
+               {monthName}
+             </p>
+           </div>
+           
+           <div className="flex items-center gap-2">
+             {isFutureMonth() && (
+               <Badge variant="outline" className="text-accent border-accent">
+                 <Calendar className="w-4 h-4 mr-1" />
+                 Planejamento
+               </Badge>
+             )}
+             
+             <Button 
+               onClick={() => setIsAddDialogOpen(true)}
+               className="transition-smooth hover:shadow-glow"
+             >
+               <Plus className="mr-2 h-4 w-4" />
+               Nova Conta
+             </Button>
+           </div>
         </div>
 
         {/* Month Navigation */}
@@ -365,28 +355,24 @@ const Accounts = () => {
           </CardHeader>
         </Card>
 
-        {/* Budget Section */}
-        {(accounts.length > 0 || isLoadingAccounts) && (
-          <Card className={`shadow-card animate-fade-in border-l-4 border-l-primary ${
-            !isCurrentMonth() ? 'opacity-60 pointer-events-none' : ''
-          }`}>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <PiggyBank className="h-5 w-5 text-primary" />
-                  Orçamento de {monthName}
-                </div>
-                {isCurrentMonth() && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsEditingBudget(!isEditingBudget)}
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </Button>
-                )}
-              </CardTitle>
-            </CardHeader>
+         {/* Budget Section */}
+         {(accounts.length > 0 || isLoadingAccounts) && (
+           <Card className="shadow-card animate-fade-in border-l-4 border-l-primary">
+             <CardHeader>
+               <CardTitle className="flex items-center justify-between">
+                 <div className="flex items-center gap-2">
+                   <PiggyBank className="h-5 w-5 text-primary" />
+                   Orçamento de {monthName}
+                 </div>
+                 <Button
+                   variant="ghost"
+                   size="sm"
+                   onClick={() => setIsEditingBudget(!isEditingBudget)}
+                 >
+                   <Edit3 className="h-4 w-4" />
+                 </Button>
+               </CardTitle>
+             </CardHeader>
             <CardContent className="space-y-4">
               {isLoadingBudget ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -403,7 +389,7 @@ const Accounts = () => {
                     {/* Orçamento Disponível */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Valor Disponível</label>
-                      {isEditingBudget && isCurrentMonth() ? (
+                      {isEditingBudget ? (
                         <div className="flex gap-2">
                           <Input
                             type="number"
@@ -599,10 +585,9 @@ const Accounts = () => {
           </div>
         )}
 
-        {/* Search and Filters - Only show for current month or if there are accounts */}
-        {(isCurrentMonth() || accounts.length > 0) && (
-          <div className="flex flex-col md:flex-row gap-4 animate-fade-in">
-            <div className="flex-1">
+        {/* Search and Filters */}
+        <div className="flex flex-col md:flex-row gap-4 animate-fade-in">
+          <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -645,10 +630,9 @@ const Accounts = () => {
                   <SelectItem value="Lazer">Lazer</SelectItem>
                   <SelectItem value="Outros">Outros</SelectItem>
                 </SelectContent>
-              </Select>
-            </div>
+            </Select>
           </div>
-        )}
+        </div>
 
         {/* Accounts List */}
         <div className="space-y-4 animate-slide-up">
@@ -675,11 +659,10 @@ const Accounts = () => {
               <AccountCard
                 key={account.id}
                 account={account}
-                onTogglePaid={handleTogglePaid}
-                onDelete={handleDeleteAccount}
-                readOnly={!isCurrentMonth()}
-              />
-            ))
+                 onTogglePaid={handleTogglePaid}
+                 onDelete={handleDeleteAccount}
+               />
+             ))
           ) : accounts.length > 0 ? (
             <Card className="shadow-card">
               <CardContent className="flex flex-col items-center justify-center py-8">
@@ -699,20 +682,13 @@ const Accounts = () => {
                 <p className="text-xl font-medium text-muted-foreground mb-2">
                   {isFutureMonth() ? "Nenhuma conta planejada" : "Nenhuma conta encontrada"}
                 </p>
-                <p className="text-sm text-muted-foreground text-center mb-4">
-                  {isCurrentMonth() 
-                    ? "Comece adicionando uma nova conta para gerenciar suas finanças"
-                    : isFutureMonth()
-                    ? "Este mês ainda não tem contas planejadas"
-                    : "Não há registros de contas para este período"
-                  }
-                </p>
-                {isCurrentMonth() && (
-                  <Button onClick={() => setIsAddDialogOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar Primeira Conta
-                  </Button>
-                )}
+                 <p className="text-sm text-muted-foreground text-center mb-4">
+                   Comece adicionando uma nova conta para gerenciar suas finanças
+                 </p>
+                 <Button onClick={() => setIsAddDialogOpen(true)}>
+                   <Plus className="mr-2 h-4 w-4" />
+                   Adicionar Primeira Conta
+                 </Button>
               </CardContent>
             </Card>
           )}
@@ -720,14 +696,12 @@ const Accounts = () => {
         </div>
       </div>
 
-      {/* Add Account Dialog - Only available for current month */}
-      {isCurrentMonth() && (
-        <AddAccountDialog
-          open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          onAdd={handleAddAccount}
-        />
-      )}
+       {/* Add Account Dialog */}
+       <AddAccountDialog
+         open={isAddDialogOpen}
+         onOpenChange={setIsAddDialogOpen}
+         onAdd={handleAddAccount}
+       />
     </div>
   );
 };

@@ -14,7 +14,7 @@ import { ptBR } from "date-fns/locale";
 
 interface AccountCardProps {
   account: {
-    id: number;
+    id: string | number;
     name: string;
     amount: number;
     dueDate: string;
@@ -23,8 +23,8 @@ interface AccountCardProps {
     isPaid: boolean;
     status: string;
   };
-  onTogglePaid: (id: number) => void;
-  onDelete: (id: number) => void;
+  onTogglePaid: (id: string | number) => void;
+  onDelete: (id: string | number) => void;
   readOnly?: boolean;
 }
 
