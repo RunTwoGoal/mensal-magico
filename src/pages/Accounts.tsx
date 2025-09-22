@@ -85,8 +85,7 @@ const Accounts = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
-  const [isLoadingBudget, setIsLoadingBudget] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Date calculations
   const monthYear = useMemo(() => {
@@ -122,49 +121,90 @@ const Accounts = () => {
     setCurrentDate(newDate);
   };
 
-  // Data fetching
+  // Data fetching - Combined useEffect
   useEffect(() => {
-    const fetchAccounts = async () => {
-      setIsLoadingAccounts(true);
+    const fetchData = async () => {
+      setIsLoading(true);
+      
       try {
-        const { data } = await api.get<ApiAccount[]>("/account/", {
-          params: { month_year: monthYear },
+        const promises = [];
+        
+        // Always fetch accounts
+        promises.push(
+          api.get<ApiAccount[]>("/account/", {
+            params: { month_year: monthYear },
+          })
+        );
+        
+        // Fetch budget with silent 404 handling
+        promises.push(
+          api.get<{ budget: { amount: number } }>("/budgets/", { 
+            params: { month_year: monthYear } 
+          }).then(response => response)
+          .catch(error => {
+            // Silently handle 404 for budget (budget not found is expected behavior)
+            if (error?.response?.status === 404) {
+              return { status: 'not_found' };
+            }
+            // For other errors, log them but don't throw
+            console.warn("Erro ao buscar orçamento:", error.message);
+            return { status: 'error' };
+          })
+        );
+
+        const results = await Promise.allSettled(promises).catch(error => {
+          if (error?.response?.status === 404) {
+              return { status: 'not_found' };
+            }
+            // For other errors, log them but don't throw
+            console.warn("Erro ao buscar orçamento:", error.message);
+            return { status: 'error' };
         });
-        console.log("Contas carregadas:", data);
-        const list: ApiAccount[] = Array.isArray(data)
-        ? data
-        : Array.isArray((data as any)?.accounts)
-        ? (data as any).accounts
-        : [];
 
-        setAccounts(list.map((account, index) => toUi(account, index)));
-      } catch (e: any) {
-        console.error("Erro ao carregar contas:", e);
-      } finally {
-        setIsLoadingAccounts(false);
-      }
-    };
-    fetchAccounts();
-
-    const fetchBudget = async () => {
-      setIsLoadingBudget(true);
-      try {
-        const { data } = await api.get<{ budget: { amount: number } }>("/budgets/", { params: { month_year: monthYear } });
-        console.log("Orçamento carregado:", data);
-        setMonthlyBudget(data.budget.amount ?? 0);
-      } catch (e: any) {
-        console.error("Erro ao carregar orçamento:", e);
-        if (e.response?.status === 404) {
+        // Handle accounts data
+        const accountsResult = results[0];
+        if (accountsResult.status === 'fulfilled') {
+          console.log("Contas carregadas:", accountsResult.value.data);
+          const list: ApiAccount[] = Array.isArray(accountsResult.value.data)
+            ? accountsResult.value.data
+            : Array.isArray((accountsResult.value.data as any)?.accounts)
+            ? (accountsResult.value.data as any).accounts
+            : [];
+          
+          setAccounts(list.map((account, index) => toUi(account, index)));
+        } else {
+          console.error("Erro ao carregar contas:", accountsResult.reason);
+          setAccounts([]);
+        }
+        
+        // Handle budget data
+        const budgetResult = results[1];
+        if (budgetResult.status === 'fulfilled') {
+          const budgetResponse = budgetResult.value as any;
+          if (budgetResponse.status === 'not_found' || budgetResponse.status === 'error') {
+            // Budget not found or error - set to 0 silently
+            setMonthlyBudget(0);
+          } else if (budgetResponse.data?.budget?.amount !== undefined) {
+            console.log("Orçamento carregado:", budgetResponse.data);
+            setMonthlyBudget(budgetResponse.data.budget.amount ?? 0);
+          } else {
+            setMonthlyBudget(0);
+          }
+        } else {
+          console.error("Erro ao carregar orçamento:", budgetResult.reason);
           setMonthlyBudget(0);
         }
+        
+      } catch (error) {
+        console.error("Erro geral ao carregar dados:", error);
+        setAccounts([]);
+        setMonthlyBudget(0);
       } finally {
-        setIsLoadingBudget(false);
+        setIsLoading(false);
       }
     };
-    if (!isFutureMonth())
-      fetchBudget();
-    else
-      setMonthlyBudget(0);
+    
+    fetchData();
   }, [monthYear]);
 
   // Calculations
@@ -196,9 +236,7 @@ const Accounts = () => {
   const handleAddAccount = async (newAccount: any) => {
     
     try {
-      console.log("Dados enviados para API:", newAccount);
       const {data} = await api.post<ApiAccount>("/account/insert", { ...newAccount } );
-      console.log("Resposta completa da API:", data);
       
       let apiAccount: ApiAccount;
       if (data && typeof data === 'object') {
@@ -356,7 +394,7 @@ const Accounts = () => {
         </Card>
 
          {/* Budget Section */}
-         {(accounts.length > 0 || isLoadingAccounts) && (
+         {(
            <Card className="shadow-card animate-fade-in border-l-4 border-l-primary">
              <CardHeader>
                <CardTitle className="flex items-center justify-between">
@@ -374,7 +412,7 @@ const Accounts = () => {
                </CardTitle>
              </CardHeader>
             <CardContent className="space-y-4">
-              {isLoadingBudget ? (
+              {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {[...Array(4)].map((_, i) => (
                     <div key={i} className="space-y-2">
@@ -500,9 +538,9 @@ const Accounts = () => {
         )}
 
         {/* Stats Cards */}
-        {(accounts.length > 0 || isLoadingAccounts) && (
+        {(accounts.length > 0 || isLoading) && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-slide-up">
-            {isLoadingAccounts ? (
+            {isLoading ? (
               [...Array(4)].map((_, i) => (
                 <Card key={i} className="shadow-card">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -636,7 +674,7 @@ const Accounts = () => {
 
         {/* Accounts List */}
         <div className="space-y-4 animate-slide-up">
-          {isLoadingAccounts ? (
+          {isLoading ? (
             [...Array(3)].map((_, i) => (
               <Card key={i} className="shadow-card">
                 <CardContent className="p-4">

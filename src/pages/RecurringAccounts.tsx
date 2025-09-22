@@ -2,6 +2,15 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { 
   Plus, 
   Edit, 
@@ -9,7 +18,8 @@ import {
   Repeat,
   Calendar,
   DollarSign,
-  Infinity
+  Infinity,
+  AlertTriangle
 } from "lucide-react";
 import { AddAccountDialog } from "@/components/AddAccountDialog";
 import { EditRecurringAccountDialog } from "@/components/EditRecurringAccountDialog";
@@ -122,75 +132,121 @@ const RecurringAccounts = () => {
   const [accounts, setAccounts] = useState<UiRecurring[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    account: UiRecurring | null;
+  }>({ isOpen: false, account: null });
 
   useEffect(() => {
-  const fetchRecurring = async () => {
-    try {
-      const { data } = await api.get<RecurringApi[] | { recurringAccounts: RecurringApi[] }>("/recurring/");
-      console.log(data);
-      const list: RecurringApi[] = Array.isArray(data)
-        ? data
-        : Array.isArray((data as any)?.recurringAccounts)
-        ? (data as any).recurringAccounts
-        : [];
+    const fetchRecurring = async () => {
+      setIsLoading(true);
+      try {
+        const { data } = await api.get<RecurringApi[] | { recurringAccounts: RecurringApi[] }>("/recurring/");
+        console.log(data);
+        const list: RecurringApi[] = Array.isArray(data)
+          ? data
+          : Array.isArray((data as any)?.recurringAccounts)
+          ? (data as any).recurringAccounts
+          : [];
 
-      const ui = list.map(toUi);
-      
-      setAccounts(ui);
-    } catch (e: any) {
-      console.error("Erro ao carregar contas recorrentes:", e);
-    }
-  };
-  fetchRecurring();
-}, []);
+        const ui = list.map(toUi);
+        
+        setAccounts(ui);
+      } catch (e: any) {
+        console.error("Erro ao carregar contas recorrentes:", e);
+        setAccounts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRecurring();
+  }, []);
 
 
   const handleAddAccount = async (newAccount: any) => {
 
-    const account = {
-      id: Date.now(),
-      ...newAccount,
-      createdDate: new Date().toISOString().split('T')[0]
-    };
-
+    
     try{
-      console.log("Adicionando conta recorrente:", newAccount);
+      
       const {data} = await api.post<RecurringApi>("/recurring/insert", { ...newAccount } );
       console.log("Conta recorrente adicionada com sucesso:", data);
+      
+      let apiAccount: RecurringApi;
+      if (data && typeof data === 'object') {
+        if ('account' in data) {
+          apiAccount = (data as any).account;
+          console.log("Conta extraída de data.account:", apiAccount);
+        } else {
+          apiAccount = data as RecurringApi;
+          console.log("Conta extraída diretamente de data:", apiAccount);
+        }
+      } else {
+        throw new Error("Resposta da API inválida");
+      }
+
+      if (!apiAccount.id || (typeof apiAccount.id !== 'string' && typeof apiAccount.id !== 'number')) {
+        console.error("ID inválido retornado pela API:", apiAccount.id);
+        throw new Error("API retornou ID inválido");
+      }
+      const processedAccount = toUi(apiAccount);
+      console.log("Conta processada:", processedAccount);
+      
+      const account = {
+        ...processedAccount
+      };
+      setAccounts([...accounts, account]);
     }
     catch(error){
       console.error("Erro ao adicionar conta recorrente:", error);
     }
-    setAccounts([...accounts, account]);
+    
     setIsAddDialogOpen(false);
   };
 
 
-  const handleEditAccount = (updatedAccount: any) => {
-    setAccounts(accounts.map(account => 
+  const handleEditAccount = async (updatedAccount: any) => {
+    
+    try {
+      const response = await api.post(`/recurring/update/${editingAccount.id}`, { ...updatedAccount });
+      console.log("Conta recorrente editada com sucesso:", response.data);
+      setAccounts(accounts.map(account => 
       account.id === editingAccount.id 
         ? { ...account, ...updatedAccount }
         : account
     ));
+    }
+    catch (error) {
+      console.error("Erro ao editar conta recorrente:", error);
+    }
     setEditingAccount(null);
   };
 
 
-  const handleDeleteAccount = (accountId: string | number) => {
+  const handleDeleteAccount = async (accountId: string | number) => {
     const account = accounts.find(acc => acc.id === accountId);
     if (!account) return;
 
-    let confirmMessage = "Tem certeza que deseja excluir esta conta recorrente?";
+    setDeleteConfirmation({ isOpen: true, account });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation.account) return;
+
+    const accountId = deleteConfirmation.account.id;
     
-    // Se é uma conta com parcelas limitadas e tem parcelas restantes
-    if (account.repeatType === 'limited' && account.remainingOccurrences && account.remainingOccurrences > 0) {
-      confirmMessage = `Tem certeza que deseja excluir esta conta recorrente?\n\nIsto irá deletar também as ${account.remainingOccurrences} parcelas futuras restantes.`;
-    }
-
-    if (confirm(confirmMessage)) {
+    try {
+      await api.delete(`/recurring/${accountId}`);
       setAccounts(accounts.filter(acc => acc.id !== accountId));
-
+    } catch (error) {
+      console.error("Erro ao deletar conta recorrente:", error);
+    } finally {
+      setDeleteConfirmation({ isOpen: false, account: null });
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmation({ isOpen: false, account: null });
   };
 
   const getCategoryColor = (category: string) => {
@@ -220,16 +276,9 @@ const RecurringAccounts = () => {
           </div>
           <div className="flex gap-2">
             <Button 
-              variant="outline"
-              onClick={() => window.location.href = '/dashboard'}
-              className="transition-smooth"
-            >
-              <DollarSign className="mr-2 h-4 w-4" />
-              Ver Dashboard
-            </Button>
-            <Button 
               onClick={() => setIsAddDialogOpen(true)}
               className="transition-smooth hover:shadow-glow"
+              disabled={isLoading}
             >
               <Plus className="mr-2 h-4 w-4" />
               Nova Conta Recorrente
@@ -239,42 +288,59 @@ const RecurringAccounts = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up">
-          <Card className="shadow-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Recorrentes</CardTitle>
-              <Repeat className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{accounts.length}</div>
-              <p className="text-xs text-muted-foreground">contas cadastradas</p>
-            </CardContent>
-          </Card>
+          {isLoading ? (
+            [...Array(3)].map((_, i) => (
+              <Card key={i} className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-4 rounded" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-3 w-24" />
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <>
+              <Card className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Recorrentes</CardTitle>
+                  <Repeat className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{accounts.length}</div>
+                  <p className="text-xs text-muted-foreground">contas cadastradas</p>
+                </CardContent>
+              </Card>
 
-          <Card className="shadow-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Valor Mensal</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                R$ {accounts.reduce((sum, account) => sum + account.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </div>
-              <p className="text-xs text-muted-foreground">valor total mensal</p>
-            </CardContent>
-          </Card>
+              <Card className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Valor Mensal</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    R$ {accounts.reduce((sum, account) => sum + account.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">valor total mensal</p>
+                </CardContent>
+              </Card>
 
-          <Card className="shadow-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Finalizando</CardTitle>
-              <Calendar className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-warning">
-                {accounts.filter(acc => acc.repeatType === 'limited' && acc.remainingOccurrences && acc.remainingOccurrences <= 3).length}
-              </div>
-              <p className="text-xs text-muted-foreground">contas próximas do fim</p>
-            </CardContent>
-          </Card>
+              <Card className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Finalizando</CardTitle>
+                  <Calendar className="h-4 w-4 text-warning" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-warning">
+                    {accounts.filter(acc => acc.repeatType === 'limited' && acc.remainingOccurrences && acc.remainingOccurrences <= 3).length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">contas próximas do fim</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Recurring Accounts List */}
@@ -287,7 +353,32 @@ const RecurringAccounts = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {accounts.length === 0 ? (
+              {isLoading ? (
+                [...Array(3)].map((_, i) => (
+                  <Card key={i} className="transition-smooth">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="h-6 w-40" />
+                            <Skeleton className="h-5 w-16" />
+                            <Skeleton className="h-5 w-24" />
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-4 w-32" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-8 w-8" />
+                          <Skeleton className="h-8 w-8" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : accounts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   Nenhuma conta recorrente cadastrada
                 </div>
@@ -331,8 +422,8 @@ const RecurringAccounts = () => {
                             {account.repeatType === 'limited' && (
                               <div className="text-xs">
                                 Total: {account.repeatCount} vezes | Criada em {account.createdDate 
-  ? new Date(account.createdDate).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) 
-  : '—'}
+        ? new Date(account.createdDate).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) 
+        : '—'}
                               </div>
                             )}
                           </div>
@@ -383,6 +474,67 @@ const RecurringAccounts = () => {
             account={editingAccount}
           />
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteConfirmation.isOpen} onOpenChange={cancelDelete}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Excluir Conta Recorrente
+              </DialogTitle>
+              <DialogDescription className="space-y-3 pt-2">
+                <div>
+                  Tem certeza que deseja excluir a conta recorrente{" "}
+                  <span className="font-semibold text-foreground">
+                    "{deleteConfirmation.account?.name}"
+                  </span>
+                  ?
+                </div>
+                
+                {deleteConfirmation.account?.repeatType === 'limited' && 
+                 deleteConfirmation.account?.remainingOccurrences && 
+                 deleteConfirmation.account.remainingOccurrences > 0 && (
+                  <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+                    <div className="flex items-start gap-2 text-warning">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium">Atenção!</p>
+                        <p>
+                          Esta ação também irá remover as{" "}
+                          <span className="font-semibold">
+                            {deleteConfirmation.account.remainingOccurrences} parcelas futuras restantes
+                          </span>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <p className="text-sm text-muted-foreground">
+                  Esta ação não pode ser desfeita.
+                </p>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={cancelDelete}
+                className="transition-smooth"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                className="transition-smooth hover:shadow-glow"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Conta
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </div>
       </div>
     </div>

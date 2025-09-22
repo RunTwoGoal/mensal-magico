@@ -153,20 +153,25 @@ export function EditRecurringAccountDialog({ open, onOpenChange, onSave, account
               value={formData.repeatType}
               onValueChange={(value) => handleInputChange("repeatType", value)}
               className="space-y-2"
+              disabled={true}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="forever" id="forever" />
-                <Label htmlFor="forever" className="text-sm">
+                <RadioGroupItem value="forever" id="forever" disabled={true} />
+                <Label htmlFor="forever" className="text-sm text-muted-foreground">
                   Para sempre (sem limite)
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="limited" id="limited" />
-                <Label htmlFor="limited" className="text-sm">
+                <RadioGroupItem value="limited" id="limited" disabled={true} />
+                <Label htmlFor="limited" className="text-sm text-muted-foreground">
                   Número limitado de vezes
                 </Label>
               </div>
             </RadioGroup>
+            
+            <p className="text-xs text-muted-foreground italic">
+              O tipo de recorrência não pode ser alterado após a criação
+            </p>
 
             {formData.repeatType === 'limited' && (
               <div className="ml-6 space-y-2">
@@ -179,9 +184,11 @@ export function EditRecurringAccountDialog({ open, onOpenChange, onSave, account
                   value={formData.repeatCount}
                   onChange={(e) => handleInputChange("repeatCount", e.target.value)}
                   required={formData.repeatType === 'limited'}
+                  disabled={true}
+                  className="bg-muted"
                 />
                 <p className="text-xs text-muted-foreground">
-                  A conta aparecerá por {formData.repeatCount || 0} meses consecutivos
+                  Valor original: {formData.repeatCount || 0} meses (não pode ser alterado)
                 </p>
               </div>
             )}
